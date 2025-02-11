@@ -7,8 +7,9 @@ import { Product, useGetProductsQuery } from "@/redux/services/productsApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 
-export default function SearchPage() {
+function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const debouncedQuery = useDebounce(query, 300);
@@ -28,9 +29,7 @@ export default function SearchPage() {
   if (error) {
     return (
       <div className="container mx-auto p-6">
-        <p className="text-red-500 text-center">
-          Error fetching search results.
-        </p>
+        <p className="text-red-500 text-center">Error fetching search results.</p>
       </div>
     );
   }
@@ -51,10 +50,7 @@ export default function SearchPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <Link
-        href="/"
-        className="text-blue-500 hover:text-blue-600 mb-4 inline-block"
-      >
+      <Link href="/" className="text-blue-500 hover:text-blue-600 mb-4 inline-block">
         ← Back to Home
       </Link>
       <h1 className="text-3xl font-bold mb-6">{`Search Results for "${query}"`}</h1>
@@ -83,10 +79,16 @@ export default function SearchPage() {
           ))}
         </div>
       ) : (
-        <p className="text-gray-600 text-center">
-          No products match your search.
-        </p>
+        <p className="text-gray-600 text-center">No products match your search.</p>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<p className="text-center">Loading...</p>}>
+      <SearchResults />
+    </Suspense>
   );
 }
