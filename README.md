@@ -40,3 +40,5 @@ Future Improvements
 -> Optimize Product Detail Page: If a product/id endpoint becomes available, switch to it for more efficient data fetching.
 -> Use Pure Server Components: Replace client components in server-side contexts to improve performance and reduce JavaScript payloads.
 ->Optimize Debouncing : Further fine-tune debounce timing for a more responsive search experience.
+
+Live Site : https://e-commerce-fabi.netlify.app/
