@@ -2,13 +2,14 @@
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useState } from 'react';
-import { addItem, removeItem, CartItem } from '@/redux/slices/cartSlice';
+import { addItem, reduceItem, removeItem} from '@/redux/slices/cartSlice';
 import { setSortBy, setCategoryFilter } from '@/redux/slices/userPreferencesSlice';
 import { setSearchQuery } from '@/redux/slices/searchSlice';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Product, useGetProductsQuery } from '@/redux/services/productsApi';
 import { RootState } from '@/redux/store';
 import { useRouter } from 'next/navigation';
+import Link from "next/link";
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -40,16 +41,16 @@ export default function Home() {
       return 0;
     });
 
-  const handleAddToCart = (product: Product) => {
-  const cartItem: CartItem = {
-    id: product.id,
-    name: product.name,
-    price: product.price,
-    category: product.categories[0] || 0, 
-    quantity: 1,  
-  };
-  dispatch(addItem(cartItem));
-};
+//   const handleAddToCart = (product: Product) => {
+//   const cartItem: CartItem = {
+//     id: product.id,
+//     name: product.name,
+//     price: product.price,
+//     category: product.categories[0] || 0, 
+//     quantity: 1,  
+//   };
+//   dispatch(addItem(cartItem));
+// };
 
   const handleRemoveFromCart = (id: number) => {
     dispatch(removeItem(id));
@@ -142,25 +143,64 @@ export default function Home() {
       {/* <h2>Products:</h2> */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
       {filteredProducts?.length ? (
-        filteredProducts.map(product => (
-          <div key={product.id} className="bg-white text-black shadow-md rounded-lg overflow-hidden">
-            <img src={product.images?.[0]?.url} alt={product.name} className="w-full h-48 object-cover" />
-            <div className="p-4">
-            <h3 className=" font-semibold">{product.name}</h3>
-            <p className="text-gray-600"> ${product.price}</p>
-            <p className="text-yellow-500"> (Rating: {product.net_price})</p>
-            <button onClick={() => handleAddToCart(product)}
-              className="mt-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
-                Add to Cart</button>
+  filteredProducts.map(product => {
+    const cartItem = cartItems.find(item => item.id === product.id);
+    const quantity = cartItem ? cartItem.quantity : 0;
+
+    const handleIncrement = () => {
+      const newQuantity = quantity + 1;
+      dispatch(
+        addItem({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: newQuantity,
+          category: product.categories[0] || 0,  // Add the first category as the default
+        })
+      );
+    };
+    
+    const handleDecrement = () => {
+      if (quantity > 1) {
+        dispatch(reduceItem(product.id));
+      } else {
+        handleRemoveFromCart(product.id);
+      }
+    };
+
+    return (
+      <div key={product.id} className="bg-white text-black shadow-md rounded-lg overflow-hidden">
+        <Link href={`/products/${product.id}`}>
+          <img src={product.images?.[0]?.url || "https://via.placeholder.com/640x480"} 
+               alt={product.name} className="w-full h-48 object-cover" />
+        </Link>
+        <div className="p-4">
+          <h3 className="font-semibold">{product.name}</h3>
+          <p className="text-gray-600">${product.price}</p>
+          <p className="text-yellow-500">Rating: {product.net_price}</p>
+          
+          {quantity === 0 ? (
+            <button
+              onClick={handleIncrement}
+              className="mt-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+            >
+              Add to Cart
+            </button>
+          ) : (
+            <div className="flex items-center justify-between mt-2 bg-green-500 text-white rounded-lg overflow-hidden">
+              <button onClick={handleDecrement} className="px-4 py-2 hover:bg-green-600">-</button>
+              <span className="px-4 py-2">{quantity}</span>
+              <button onClick={handleIncrement} className="px-4 py-2 hover:bg-green-600">+</button>
             </div>
-           
-          </div>
-        ))
-        
-      ) : (
-        <p className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 text-center bg-white bg-opacity-60 rounded-lg p-2 mt-4">
-        No products matching your search in <span className="font-bold">page {currentPage}</span></p>
-      )}
+          )}
+        </div>
+      </div>
+    );
+  })
+) : (
+  <p className="text-center">No products matching your search.</p>
+)}
+
       </div>
 
       

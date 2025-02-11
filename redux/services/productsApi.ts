@@ -30,6 +30,9 @@ export type ProductImage = {
         query: (page) => 
           page === 'all' ? `products?_quantity=1000` : `products?_quantity=12&_page=${page}`,
       }),
+    //   getProductById: builder.query<Product, number>({
+    //     query: (id) => `products/${id}`,
+    //   }),
     }),
   });
   
